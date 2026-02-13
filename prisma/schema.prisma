@@ -1,0 +1,244 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+// ─── TENANT (Multi-tenancy) ────────────────────────────────────
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  settings  Json     @default("{}")
+  users     User[]
+  roles     Role[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tenants")
+}
+
+// ─── USER ──────────────────────────────────────────────────────
+
+model User {
+  id                   String         @id @default(cuid())
+  email                String
+  password             String
+  firstName            String?
+  lastName             String?
+  isActive             Boolean        @default(true)
+  emailVerified        Boolean        @default(false)
+  resetToken           String?
+  resetTokenExpiresAt  DateTime?
+  tenantId             String
+  tenant               Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  roles                UserRole[]
+  refreshTokens        RefreshToken[]
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@unique([email, tenantId])
+  @@index([tenantId])
+  @@index([email])
+  @@map("users")
+}
+
+// ─── ROLE ──────────────────────────────────────────────────────
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  isSystem    Boolean          @default(false)
+  tenantId    String
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  permissions RolePermission[]
+  users       UserRole[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([name, tenantId])
+  @@index([tenantId])
+  @@map("roles")
+}
+
+// ─── PERMISSION ────────────────────────────────────────────────
+
+model Permission {
+  id          String           @id @default(cuid())
+  action      String
+  resource    String
+  description String?
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now())
+
+  @@unique([action, resource])
+  @@map("permissions")
+}
+
+// ─── USER ↔ ROLE (Many-to-Many) ────────────────────────────────
+
+model UserRole {
+  userId    String
+  roleId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// ─── ROLE ↔ PERMISSION (Many-to-Many) ──────────────────────────
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ─── REFRESH TOKEN ─────────────────────────────────────────────
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// ─── AUDIT LOG ──────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  resource  String
+  resourceId String?
+  userId    String?
+  tenantId  String?
+  metadata  Json     @default("{}")
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([action, resource])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── FILE UPLOAD ────────────────────────────────────────────────
+
+model FileUpload {
+  id           String   @id @default(cuid())
+  originalName String
+  storagePath  String
+  mimeType     String
+  size         Int
+  url          String
+  uploadedBy   String
+  tenantId     String
+  createdAt    DateTime @default(now())
+
+  @@index([uploadedBy])
+  @@index([tenantId])
+  @@map("file_uploads")
+}
+
+// ─── WEBHOOK SUBSCRIPTION (Phase 3) ────────────────────────────
+
+model WebhookSubscription {
+  id          String   @id @default(cuid())
+  tenantId    String
+  url         String
+  events      String[] // Array of event names: user.created, file.uploaded, etc.
+  secret      String   // For HMAC signature verification
+  isActive    Boolean  @default(true)
+  description String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("webhook_subscriptions")
+}
+
+// ─── WEBHOOK DELIVERY LOG (Phase 3) ────────────────────────────
+
+model WebhookDelivery {
+  id             String   @id @default(cuid())
+  webhookId      String
+  event          String
+  payload        Json
+  url            String
+  statusCode     Int?
+  responseBody   String?
+  error          String?
+  attempts       Int      @default(1)
+  deliveredAt    DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([event])
+  @@index([createdAt])
+  @@map("webhook_deliveries")
+}
+
+// ─── FEATURE FLAG (Phase 3) ─────────────────────────────────────
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   // e.g., 'advanced-analytics', 'ai-features'
+  name        String
+  description String?
+  isEnabled   Boolean  @default(false)
+  tenantId    String?  // NULL = global flag, otherwise tenant-specific
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([key, tenantId])
+  @@index([tenantId])
+  @@index([isEnabled])
+  @@map("feature_flags")
+}
+
+// ─── TENANT PLAN (Phase 3) ──────────────────────────────────────
+
+model TenantPlan {
+  id              String   @id @default(cuid())
+  tenantId        String   @unique
+  planType        String   // 'starter', 'pro', 'enterprise'
+  rateLimit       Int      @default(100) // requests per minute
+  maxUsers        Int      @default(10)
+  maxStorage      BigInt   @default(1073741824) // bytes (1GB default)
+  maxWebhooks     Int      @default(5)
+  featuresEnabled String[] // Array of enabled feature keys
+  validUntil      DateTime?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([planType])
+  @@index([isActive])
+  @@map("tenant_plans")
+}

@@ -76,7 +76,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 tags: ['Pages'],
                 summary: 'List published pages (public)',
                 description: 'Get paginated list of published pages',
-                querystring: listPagesSchema,
             },
         },
         async (request, reply) => {
@@ -150,7 +149,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 summary: 'List all pages including drafts (protected)',
                 description: 'Get all pages for management',
                 security: [{ bearerAuth: [] }],
-                querystring: listPagesSchema,
             },
         },
         async (request, reply) => {
@@ -211,7 +209,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 tags: ['Pages'],
                 summary: 'Create a new page',
                 security: [{ bearerAuth: [] }],
-                body: createPageSchema,
             },
         },
         async (request, reply) => {
@@ -233,7 +230,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 summary: 'Update a page',
                 security: [{ bearerAuth: [] }],
                 params: pageIdSchema,
-                body: updatePageSchema,
             },
         },
         async (request, reply) => {
@@ -256,7 +252,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 summary: 'Publish a page',
                 security: [{ bearerAuth: [] }],
                 params: pageIdSchema,
-                body: publishPageSchema,
             },
         },
         async (request, reply) => {
@@ -279,7 +274,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 summary: 'Reorder pages',
                 description: 'Update the order of multiple pages at once',
                 security: [{ bearerAuth: [] }],
-                body: reorderPagesSchema,
             },
         },
         async (request, reply) => {

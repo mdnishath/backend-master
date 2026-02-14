@@ -28,7 +28,6 @@ export default async function tagRoutes(app: FastifyInstance) {
                 tags: ['Tags'],
                 summary: 'List all tags (public)',
                 description: 'Get paginated list of tags for a tenant',
-                querystring: listTagsSchema,
                 response: {
                     200: {
                         type: 'object',
@@ -170,7 +169,6 @@ export default async function tagRoutes(app: FastifyInstance) {
                 tags: ['Tags'],
                 summary: 'Create a new tag',
                 security: [{ bearerAuth: [] }],
-                body: createTagSchema,
             },
         },
         async (request, reply) => {
@@ -192,7 +190,6 @@ export default async function tagRoutes(app: FastifyInstance) {
                 summary: 'Update a tag',
                 security: [{ bearerAuth: [] }],
                 params: tagIdSchema,
-                body: updateTagSchema,
             },
         },
         async (request, reply) => {

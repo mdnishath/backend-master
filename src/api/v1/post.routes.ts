@@ -25,7 +25,6 @@ export async function postRoutes(app: FastifyInstance) {
             description: 'Create a new post',
             tags: ['Posts'],
             security: [{ bearerAuth: [] }],
-            body: createPostSchema,
         },
         preHandler: [authGuard, requirePermission('posts:write')],
         handler: async (request, reply) => {
@@ -43,7 +42,6 @@ export async function postRoutes(app: FastifyInstance) {
         schema: {
             description: 'List posts with filters and pagination',
             tags: ['Posts'],
-            querystring: listPostsSchema,
         },
         handler: async (request, reply) => {
             const query = listPostsSchema.parse(request.query)
@@ -72,7 +70,6 @@ export async function postRoutes(app: FastifyInstance) {
             description: 'List all posts (including drafts) for management',
             tags: ['Posts'],
             security: [{ bearerAuth: [] }],
-            querystring: listPostsSchema,
         },
         preHandler: authGuard,
         handler: async (request, reply) => {
@@ -151,7 +148,6 @@ export async function postRoutes(app: FastifyInstance) {
                     id: { type: 'string' },
                 },
             },
-            body: updatePostSchema,
         },
         preHandler: [authGuard, requirePermission('posts:write')],
         handler: async (request, reply) => {
@@ -176,7 +172,6 @@ export async function postRoutes(app: FastifyInstance) {
                     id: { type: 'string' },
                 },
             },
-            body: publishPostSchema,
         },
         preHandler: [authGuard, requirePermission('posts:write')],
         handler: async (request, reply) => {

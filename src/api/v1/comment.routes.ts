@@ -30,7 +30,6 @@ export default async function commentRoutes(app: FastifyInstance) {
                 tags: ['Comments'],
                 summary: 'List approved comments (public)',
                 description: 'Get paginated list of approved comments for a post',
-                querystring: listCommentsSchema,
             },
         },
         async (request, reply) => {
@@ -93,7 +92,6 @@ export default async function commentRoutes(app: FastifyInstance) {
                 tags: ['Comments'],
                 summary: 'Create a new comment',
                 description: 'Create a comment as authenticated user or guest. All comments start as pending.',
-                body: createCommentSchema,
             },
         },
         async (request, reply) => {
@@ -123,7 +121,6 @@ export default async function commentRoutes(app: FastifyInstance) {
                 description: 'Update comment content (author only) or status (admin only)',
                 security: [{ bearerAuth: [] }],
                 params: commentIdSchema,
-                body: updateCommentSchema,
             },
         },
         async (request, reply) => {
@@ -174,7 +171,6 @@ export default async function commentRoutes(app: FastifyInstance) {
                 summary: 'List all comments for management (admin)',
                 description: 'Get all comments including pending and spam (admin only)',
                 security: [{ bearerAuth: [] }],
-                querystring: listCommentsSchema,
             },
         },
         async (request, reply) => {
@@ -226,7 +222,6 @@ export default async function commentRoutes(app: FastifyInstance) {
                 description: 'Change comment status to approved or spam',
                 security: [{ bearerAuth: [] }],
                 params: commentIdSchema,
-                body: approveCommentSchema,
             },
         },
         async (request, reply) => {
@@ -254,7 +249,6 @@ export default async function commentRoutes(app: FastifyInstance) {
                 summary: 'Bulk approve or reject comments (admin)',
                 description: 'Change status of multiple comments at once',
                 security: [{ bearerAuth: [] }],
-                body: bulkApproveCommentsSchema,
             },
         },
         async (request, reply) => {

@@ -27,7 +27,6 @@ export default async function categoryRoutes(app: FastifyInstance) {
                 tags: ['Categories'],
                 summary: 'List all categories (public)',
                 description: 'Get paginated list of categories for a tenant',
-                querystring: listCategoriesSchema,
                 response: {
                     200: {
                         type: 'object',
@@ -145,7 +144,6 @@ export default async function categoryRoutes(app: FastifyInstance) {
                 tags: ['Categories'],
                 summary: 'Create a new category',
                 security: [{ bearerAuth: [] }],
-                body: createCategorySchema,
             },
         },
         async (request, reply) => {
@@ -167,7 +165,6 @@ export default async function categoryRoutes(app: FastifyInstance) {
                 summary: 'Update a category',
                 security: [{ bearerAuth: [] }],
                 params: categoryIdSchema,
-                body: updateCategorySchema,
             },
         },
         async (request, reply) => {

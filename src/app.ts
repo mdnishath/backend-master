@@ -21,6 +21,8 @@ import { featureFlagRoutes } from './api/v1/feature-flag.routes.js'
 import { adminRoutes } from './api/v1/admin.routes.js'
 import { emailRoutes } from './api/v1/email.routes.js'
 import { postRoutes } from './api/v1/post.routes.js'
+import categoryRoutes from './api/v1/category.routes.js'
+import tagRoutes from './api/v1/tag.routes.js'
 import { prisma } from './infra/database/prisma.js'
 import { successResponse } from './shared/response.js'
 
@@ -90,6 +92,10 @@ export async function buildApp() {
                 { name: 'Features', description: 'Feature flags management' },
                 { name: 'Plans', description: 'Tenant plans & usage limits' },
                 { name: 'Admin', description: 'Admin dashboard & system management' },
+                { name: 'Email', description: 'Email management & templates' },
+                { name: 'Posts', description: 'CMS posts management' },
+                { name: 'Categories', description: 'Post categories' },
+                { name: 'Tags', description: 'Post tags' },
             ],
         },
     })
@@ -194,6 +200,8 @@ export async function buildApp() {
     await app.register(featureFlagRoutes, { prefix: '/api/v1' })
     await app.register(emailRoutes, { prefix: '/api/v1' })
     await app.register(postRoutes, { prefix: '/api/v1' })
+    await app.register(categoryRoutes, { prefix: '/api/v1' })
+    await app.register(tagRoutes, { prefix: '/api/v1' })
     await app.register(adminRoutes, { prefix: '/api/v1' })
 
     return app

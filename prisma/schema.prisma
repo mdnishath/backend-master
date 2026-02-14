@@ -231,3 +231,44 @@ model FeatureFlag {
 //   "maxWebhooks": -1,          // -1 = unlimited
 //   "features": ["posts", "ecommerce", "notifications"]
 // }
+
+// ─── EMAIL TEMPLATE (Email System) ─────────────────────────────
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  tenantId    String?  // null = global template
+  name        String   // "welcome", "password-reset", "invitation"
+  subject     String
+  htmlBody    String   @db.Text
+  textBody    String?  @db.Text
+  variables   Json     @default("{}") // {name: "string", email: "string", resetLink: "string"}
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("email_templates")
+}
+
+// ─── EMAIL LOG (Email Tracking) ────────────────────────────────
+
+model EmailLog {
+  id           String   @id @default(cuid())
+  tenantId     String
+  to           String
+  from         String?
+  subject      String
+  templateName String?
+  status       String   // "sent", "failed", "bounced", "delivered", "opened", "clicked"
+  emailId      String?  // External email ID from provider
+  error        String?  @db.Text
+  metadata     Json     @default("{}")
+  sentAt       DateTime @default(now())
+
+  @@index([tenantId, sentAt])
+  @@index([status])
+  @@index([to])
+  @@map("email_logs")
+}

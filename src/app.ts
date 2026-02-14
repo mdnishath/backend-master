@@ -19,6 +19,7 @@ import { jobRoutes } from './api/v1/job.routes.js'
 import { webhookRoutes } from './api/v1/webhook.routes.js'
 import { featureFlagRoutes } from './api/v1/feature-flag.routes.js'
 import { adminRoutes } from './api/v1/admin.routes.js'
+import { emailRoutes } from './api/v1/email.routes.js'
 import { prisma } from './infra/database/prisma.js'
 import { successResponse } from './shared/response.js'
 
@@ -190,6 +191,7 @@ export async function buildApp() {
     await app.register(jobRoutes, { prefix: '/api/v1' })
     await app.register(webhookRoutes, { prefix: '/api/v1' })
     await app.register(featureFlagRoutes, { prefix: '/api/v1' })
+    await app.register(emailRoutes, { prefix: '/api/v1' })
     await app.register(adminRoutes, { prefix: '/api/v1' })
 
     return app

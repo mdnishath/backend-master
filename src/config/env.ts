@@ -16,6 +16,11 @@ const envSchema = z.object({
     UPLOAD_DIR: z.string().default('uploads'),
     MAX_FILE_SIZE: z.coerce.number().default(10485760), // 10MB
 
+    // Email configuration (Resend)
+    RESEND_API_KEY: z.string().optional(), // Optional for development
+    EMAIL_FROM: z.string().email().default('noreply@example.com'),
+    EMAIL_FROM_NAME: z.string().default('Enterprise SaaS'),
+
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 })
 

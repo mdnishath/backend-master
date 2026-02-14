@@ -53,23 +53,70 @@
 
 ## 🚀 Quick Start
 
-### **Prerequisites**
+### **Option 1: One-Command Docker Setup** ⚡ **RECOMMENDED**
+
+Perfect for getting started in minutes! Requires only Docker.
+
+```bash
+git clone https://github.com/mdnishath/backend-master.git
+cd backend-master
+chmod +x scripts/setup.sh
+./scripts/setup.sh
+```
+
+**That's it!** 🎉 The script will:
+- ✅ Generate secure credentials
+- ✅ Start PostgreSQL & Redis
+- ✅ Run database migrations
+- ✅ Seed default admin user
+- ✅ Build and start the API
+
+**Your API will be running at:** http://localhost:3000
+
+---
+
+### **Option 2: Interactive Setup Wizard** 🎨
+
+For custom configurations (database type, deployment target, etc.):
+
+```bash
+git clone https://github.com/mdnishath/backend-master.git
+cd backend-master
+npm install
+npx tsx scripts/setup-wizard.ts
+```
+
+The wizard will guide you through:
+- 📊 Database selection (PostgreSQL/MySQL/SQLite)
+- 🔄 Redis configuration
+- 🔐 Security settings
+- 🚀 Deployment type (Docker/Manual/Railway/Render)
+
+---
+
+### **Option 3: Manual Setup** 🛠️
+
+For developers who want full control:
+
+**Prerequisites:**
 - Node.js 20+
 - PostgreSQL 15+
 - Redis (optional - graceful degradation)
 
-### **1. Clone Repository**
+**Steps:**
+
+1. **Clone Repository**
 ```bash
 git clone https://github.com/mdnishath/backend-master.git
 cd backend-master
 ```
 
-### **2. Install Dependencies**
+2. **Install Dependencies**
 ```bash
 npm install
 ```
 
-### **3. Setup Environment**
+3. **Setup Environment**
 ```bash
 cp .env.example .env
 # Edit .env with your database credentials
@@ -95,12 +142,12 @@ MAX_FILE_SIZE=10485760
 LOG_LEVEL=debug
 ```
 
-### **4. Run Database Migrations**
+4. **Run Database Migrations**
 ```bash
 npx prisma migrate dev
 ```
 
-### **5. Start Development Server**
+5. **Start Development Server**
 ```bash
 npm run dev
 ```

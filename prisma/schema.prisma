@@ -272,3 +272,162 @@ model EmailLog {
   @@index([to])
   @@map("email_logs")
 }
+
+// ─── POST (CMS - Blog/News) ────────────────────────────────────
+
+model Post {
+  id            String    @id @default(cuid())
+  tenantId      String
+  authorId      String
+  title         String
+  slug          String
+  excerpt       String?   @db.Text
+  content       Json      // Rich text editor JSON (TipTap/Lexical)
+  htmlContent   String?   @db.Text  // Rendered HTML for SEO
+  featuredImage String?
+  status        String    @default("draft") // "draft", "published", "scheduled"
+  publishedAt   DateTime?
+  scheduledFor  DateTime?
+  views         Int       @default(0)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+  ogImage         String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  categories    PostCategory[]
+  tags          PostTag[]
+  comments      Comment[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status, publishedAt])
+  @@index([authorId])
+  @@map("posts")
+}
+
+// ─── PAGE (CMS - Static Pages) ─────────────────────────────────
+
+model Page {
+  id            String    @id @default(cuid())
+  tenantId      String
+  authorId      String
+  title         String
+  slug          String
+  content       Json      // Rich text editor JSON
+  htmlContent   String?   @db.Text
+  template      String?   // "default", "landing", "blank"
+  status        String    @default("draft")
+  publishedAt   DateTime?
+  isHomePage    Boolean   @default(false)
+  parentId      String?   // For nested pages
+  order         Int       @default(0)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  ogImage         String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  parent        Page?     @relation("PageHierarchy", fields: [parentId], references: [id])
+  children      Page[]    @relation("PageHierarchy")
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status])
+  @@index([authorId])
+  @@map("pages")
+}
+
+// ─── CATEGORY ──────────────────────────────────────────────────
+
+model Category {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  parentId    String?  // For nested categories
+
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  posts       PostCategory[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("categories")
+}
+
+// ─── TAG ───────────────────────────────────────────────────────
+
+model Tag {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  slug        String
+
+  posts       PostTag[]
+
+  createdAt   DateTime @default(now())
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("tags")
+}
+
+// ─── POST ↔ CATEGORY (Many-to-Many) ────────────────────────────
+
+model PostCategory {
+  postId      String
+  categoryId  String
+
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([postId, categoryId])
+  @@map("post_categories")
+}
+
+// ─── POST ↔ TAG (Many-to-Many) ─────────────────────────────────
+
+model PostTag {
+  postId      String
+  tagId       String
+
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag         Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+// ─── COMMENT ───────────────────────────────────────────────────
+
+model Comment {
+  id          String   @id @default(cuid())
+  postId      String
+  authorId    String?  // Null if guest comment
+  authorName  String?  // For guest comments
+  authorEmail String?  // For guest comments
+  content     String   @db.Text
+  status      String   @default("pending") // "pending", "approved", "spam"
+  parentId    String?  // For nested replies
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent      Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies     Comment[] @relation("CommentReplies")
+
+  @@index([postId, status])
+  @@index([authorId])
+  @@map("comments")
+}

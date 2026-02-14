@@ -24,6 +24,7 @@ import { postRoutes } from './api/v1/post.routes.js'
 import categoryRoutes from './api/v1/category.routes.js'
 import tagRoutes from './api/v1/tag.routes.js'
 import commentRoutes from './api/v1/comment.routes.js'
+import pageRoutes from './api/v1/page.routes.js'
 import { prisma } from './infra/database/prisma.js'
 import { successResponse } from './shared/response.js'
 
@@ -98,6 +99,7 @@ export async function buildApp() {
                 { name: 'Categories', description: 'Post categories' },
                 { name: 'Tags', description: 'Post tags' },
                 { name: 'Comments', description: 'Post comments & moderation' },
+                { name: 'Pages', description: 'Static pages management' },
             ],
         },
     })
@@ -205,6 +207,7 @@ export async function buildApp() {
     await app.register(categoryRoutes, { prefix: '/api/v1' })
     await app.register(tagRoutes, { prefix: '/api/v1' })
     await app.register(commentRoutes, { prefix: '/api/v1' })
+    await app.register(pageRoutes, { prefix: '/api/v1' })
     await app.register(adminRoutes, { prefix: '/api/v1' })
 
     return app

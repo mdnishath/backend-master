@@ -25,7 +25,6 @@ export async function emailRoutes(app: FastifyInstance) {
             description: 'Send an email',
             tags: ['Emails'],
             security: [{ bearerAuth: [] }],
-            body: sendEmailSchema,
         },
         preHandler: authGuard,
         handler: async (request, reply) => {
@@ -47,7 +46,6 @@ export async function emailRoutes(app: FastifyInstance) {
             description: 'Send an email using a template',
             tags: ['Emails'],
             security: [{ bearerAuth: [] }],
-            body: sendTemplateEmailSchema,
         },
         preHandler: authGuard,
         handler: async (request, reply) => {
@@ -69,7 +67,6 @@ export async function emailRoutes(app: FastifyInstance) {
             description: 'Get email logs',
             tags: ['Emails'],
             security: [{ bearerAuth: [] }],
-            querystring: getEmailLogsSchema,
         },
         preHandler: authGuard,
         handler: async (request, reply) => {
@@ -111,7 +108,6 @@ export async function emailRoutes(app: FastifyInstance) {
             description: 'Create an email template',
             tags: ['Emails'],
             security: [{ bearerAuth: [] }],
-            body: createEmailTemplateSchema,
         },
         preHandler: [authGuard, requirePermission('emails:write')],
         handler: async (request, reply) => {
@@ -168,7 +164,6 @@ export async function emailRoutes(app: FastifyInstance) {
                     id: { type: 'string' },
                 },
             },
-            body: updateEmailTemplateSchema,
         },
         preHandler: [authGuard, requirePermission('emails:write')],
         handler: async (request, reply) => {

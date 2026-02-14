@@ -98,7 +98,6 @@ export default async function pageRoutes(app: FastifyInstance) {
             schema: {
                 tags: ['Pages'],
                 summary: 'Get page by slug (public)',
-                params: pageSlugSchema,
             },
         },
         async (request, reply) => {
@@ -121,7 +120,6 @@ export default async function pageRoutes(app: FastifyInstance) {
             schema: {
                 tags: ['Pages'],
                 summary: 'Get page by ID (public)',
-                params: pageIdSchema,
             },
         },
         async (request, reply) => {
@@ -188,7 +186,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 tags: ['Pages'],
                 summary: 'Get page by ID including drafts (protected)',
                 security: [{ bearerAuth: [] }],
-                params: pageIdSchema,
             },
         },
         async (request, reply) => {
@@ -229,7 +226,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 tags: ['Pages'],
                 summary: 'Update a page',
                 security: [{ bearerAuth: [] }],
-                params: pageIdSchema,
             },
         },
         async (request, reply) => {
@@ -251,7 +247,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 tags: ['Pages'],
                 summary: 'Publish a page',
                 security: [{ bearerAuth: [] }],
-                params: pageIdSchema,
             },
         },
         async (request, reply) => {
@@ -294,7 +289,6 @@ export default async function pageRoutes(app: FastifyInstance) {
                 tags: ['Pages'],
                 summary: 'Delete a page',
                 security: [{ bearerAuth: [] }],
-                params: pageIdSchema,
             },
         },
         async (request, reply) => {

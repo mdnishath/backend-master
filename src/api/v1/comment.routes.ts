@@ -52,7 +52,6 @@ export default async function commentRoutes(app: FastifyInstance) {
             schema: {
                 tags: ['Comments'],
                 summary: 'Get comment by ID (public)',
-                params: commentIdSchema,
             },
         },
         async (request, reply) => {
@@ -120,7 +119,6 @@ export default async function commentRoutes(app: FastifyInstance) {
                 summary: 'Update a comment',
                 description: 'Update comment content (author only) or status (admin only)',
                 security: [{ bearerAuth: [] }],
-                params: commentIdSchema,
             },
         },
         async (request, reply) => {
@@ -145,7 +143,6 @@ export default async function commentRoutes(app: FastifyInstance) {
                 summary: 'Delete a comment',
                 description: 'Delete your own comment or any comment (admin). Comments with replies are soft-deleted.',
                 security: [{ bearerAuth: [] }],
-                params: commentIdSchema,
             },
         },
         async (request, reply) => {
@@ -221,7 +218,6 @@ export default async function commentRoutes(app: FastifyInstance) {
                 summary: 'Approve or reject a comment (admin)',
                 description: 'Change comment status to approved or spam',
                 security: [{ bearerAuth: [] }],
-                params: commentIdSchema,
             },
         },
         async (request, reply) => {

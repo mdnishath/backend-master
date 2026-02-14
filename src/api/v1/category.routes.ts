@@ -64,7 +64,6 @@ export default async function categoryRoutes(app: FastifyInstance) {
             schema: {
                 tags: ['Categories'],
                 summary: 'Get category by slug (public)',
-                params: categorySlugSchema,
             },
         },
         async (request, reply) => {
@@ -90,7 +89,6 @@ export default async function categoryRoutes(app: FastifyInstance) {
             schema: {
                 tags: ['Categories'],
                 summary: 'Get category by ID (public)',
-                params: categoryIdSchema,
             },
         },
         async (request, reply) => {
@@ -116,7 +114,6 @@ export default async function categoryRoutes(app: FastifyInstance) {
             schema: {
                 tags: ['Categories'],
                 summary: 'Get category statistics (public)',
-                params: categoryIdSchema,
             },
         },
         async (request, reply) => {
@@ -164,7 +161,6 @@ export default async function categoryRoutes(app: FastifyInstance) {
                 tags: ['Categories'],
                 summary: 'Update a category',
                 security: [{ bearerAuth: [] }],
-                params: categoryIdSchema,
             },
         },
         async (request, reply) => {
@@ -186,7 +182,6 @@ export default async function categoryRoutes(app: FastifyInstance) {
                 tags: ['Categories'],
                 summary: 'Delete a category',
                 security: [{ bearerAuth: [] }],
-                params: categoryIdSchema,
             },
         },
         async (request, reply) => {

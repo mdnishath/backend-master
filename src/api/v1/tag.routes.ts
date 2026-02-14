@@ -98,7 +98,6 @@ export default async function tagRoutes(app: FastifyInstance) {
             schema: {
                 tags: ['Tags'],
                 summary: 'Get tag by slug (public)',
-                params: tagSlugSchema,
             },
         },
         async (request, reply) => {
@@ -121,7 +120,6 @@ export default async function tagRoutes(app: FastifyInstance) {
             schema: {
                 tags: ['Tags'],
                 summary: 'Get tag by ID (public)',
-                params: tagIdSchema,
             },
         },
         async (request, reply) => {
@@ -144,7 +142,6 @@ export default async function tagRoutes(app: FastifyInstance) {
             schema: {
                 tags: ['Tags'],
                 summary: 'Get tag statistics (public)',
-                params: tagIdSchema,
             },
         },
         async (request, reply) => {
@@ -189,7 +186,6 @@ export default async function tagRoutes(app: FastifyInstance) {
                 tags: ['Tags'],
                 summary: 'Update a tag',
                 security: [{ bearerAuth: [] }],
-                params: tagIdSchema,
             },
         },
         async (request, reply) => {
@@ -211,7 +207,6 @@ export default async function tagRoutes(app: FastifyInstance) {
                 tags: ['Tags'],
                 summary: 'Delete a tag',
                 security: [{ bearerAuth: [] }],
-                params: tagIdSchema,
             },
         },
         async (request, reply) => {

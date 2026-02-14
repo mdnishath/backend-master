@@ -9,9 +9,27 @@ interface RateLimitInfo {
     reset: number
 }
 
+interface TenantSettings {
+    rateLimit?: number // requests per minute (-1 = unlimited)
+    maxUsers?: number // -1 = unlimited
+    maxStorage?: number // bytes, -1 = unlimited
+    maxWebhooks?: number // -1 = unlimited
+    features?: string[] // enabled features: ["posts", "ecommerce", "notifications"]
+}
+
+const DEFAULT_SETTINGS: TenantSettings = {
+    rateLimit: 100,
+    maxUsers: -1, // unlimited (open source!)
+    maxStorage: -1, // unlimited
+    maxWebhooks: -1, // unlimited
+    features: ['*'], // all features enabled
+}
+
 /**
- * Dynamic per-tenant rate limiting based on TenantPlan
+ * Dynamic per-tenant rate limiting based on Tenant settings
  * Uses Redis sliding window algorithm for accurate counting
+ *
+ * Settings stored in Tenant.settings JSON field (no paid plans!)
  */
 export async function rateLimitGuard(request: FastifyRequest, _reply: FastifyReply) {
     // Skip rate limiting for non-authenticated requests (handled by global Fastify rate limit)
@@ -23,18 +41,30 @@ export async function rateLimitGuard(request: FastifyRequest, _reply: FastifyRep
     const now = Date.now()
     const windowMs = 60 * 1000 // 1 minute window
 
-    // Get tenant's rate limit from plan (cached for 5 minutes)
-    const cacheKey = `plan:${tenantId}`
-    let rateLimit = await cacheGet<number>(cacheKey)
+    // Get tenant's rate limit from settings (cached for 5 minutes)
+    const cacheKey = `tenant:settings:${tenantId}`
+    let settings = await cacheGet<TenantSettings>(cacheKey)
 
-    if (rateLimit === null) {
-        const plan = await prisma.tenantPlan.findUnique({
-            where: { tenantId },
-            select: { rateLimit: true, isActive: true },
+    if (settings === null) {
+        const tenant = await prisma.tenant.findUnique({
+            where: { id: tenantId },
+            select: { settings: true, isActive: true },
         })
 
-        rateLimit = plan?.isActive ? plan.rateLimit : 100 // Default to 100 if no plan
-        await cacheSet(cacheKey, rateLimit, 300) // Cache for 5 minutes
+        if (!tenant || !tenant.isActive) {
+            throw new TooManyRequestsError('Tenant is not active')
+        }
+
+        // Merge with defaults
+        settings = { ...DEFAULT_SETTINGS, ...(tenant.settings as TenantSettings || {}) }
+        await cacheSet(cacheKey, settings, 300) // Cache for 5 minutes
+    }
+
+    const rateLimit = settings.rateLimit || DEFAULT_SETTINGS.rateLimit!
+
+    // -1 means unlimited (skip rate limiting)
+    if (rateLimit === -1) {
+        return
     }
 
     // Redis key for sliding window
@@ -93,43 +123,40 @@ export async function rateLimitGuard(request: FastifyRequest, _reply: FastifyRep
 }
 
 /**
- * Create a default plan for a tenant if it doesn't exist
+ * Get tenant settings (with defaults)
  */
-export async function createDefaultPlan(tenantId: string, planType: 'starter' | 'pro' | 'enterprise' = 'starter') {
-    const planLimits = {
-        starter: {
-            rateLimit: 100,
-            maxUsers: 10,
-            maxStorage: BigInt(1073741824), // 1GB
-            maxWebhooks: 5,
-            featuresEnabled: ['basic-analytics', 'email-notifications'],
-        },
-        pro: {
-            rateLimit: 500,
-            maxUsers: 50,
-            maxStorage: BigInt(10737418240), // 10GB
-            maxWebhooks: 25,
-            featuresEnabled: ['basic-analytics', 'email-notifications', 'advanced-analytics', 'webhooks'],
-        },
-        enterprise: {
-            rateLimit: 2000,
-            maxUsers: -1, // Unlimited
-            maxStorage: BigInt(107374182400), // 100GB
-            maxWebhooks: 100,
-            featuresEnabled: ['*'], // All features
-        },
+export async function getTenantSettings(tenantId: string): Promise<TenantSettings> {
+    const cacheKey = `tenant:settings:${tenantId}`
+    let settings = await cacheGet<TenantSettings>(cacheKey)
+
+    if (settings === null) {
+        const tenant = await prisma.tenant.findUnique({
+            where: { id: tenantId },
+            select: { settings: true },
+        })
+
+        settings = { ...DEFAULT_SETTINGS, ...(tenant?.settings as TenantSettings || {}) }
+        await cacheSet(cacheKey, settings, 300)
     }
 
-    const limits = planLimits[planType]
+    return settings
+}
 
-    return prisma.tenantPlan.upsert({
-        where: { tenantId },
-        update: limits,
-        create: {
-            tenantId,
-            planType,
-            ...limits,
-            isActive: true,
-        },
+/**
+ * Update tenant settings
+ */
+export async function updateTenantSettings(tenantId: string, newSettings: Partial<TenantSettings>): Promise<TenantSettings> {
+    const currentSettings = await getTenantSettings(tenantId)
+    const updatedSettings = { ...currentSettings, ...newSettings }
+
+    await prisma.tenant.update({
+        where: { id: tenantId },
+        data: { settings: updatedSettings as any },
     })
+
+    // Invalidate cache
+    const cacheKey = `tenant:settings:${tenantId}`
+    await cacheSet(cacheKey, updatedSettings, 300)
+
+    return updatedSettings
 }

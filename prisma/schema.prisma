@@ -222,23 +222,12 @@ model FeatureFlag {
   @@map("feature_flags")
 }
 
-// ─── TENANT PLAN (Phase 3) ──────────────────────────────────────
-
-model TenantPlan {
-  id              String   @id @default(cuid())
-  tenantId        String   @unique
-  planType        String   // 'starter', 'pro', 'enterprise'
-  rateLimit       Int      @default(100) // requests per minute
-  maxUsers        Int      @default(10)
-  maxStorage      BigInt   @default(1073741824) // bytes (1GB default)
-  maxWebhooks     Int      @default(5)
-  featuresEnabled String[] // Array of enabled feature keys
-  validUntil      DateTime?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([planType])
-  @@index([isActive])
-  @@map("tenant_plans")
-}
+// ─── TENANT PLAN REMOVED (Open Source - No Paid Tiers) ─────────
+// Settings are now in Tenant.settings JSON field:
+// {
+//   "rateLimit": 100,           // requests per minute (-1 = unlimited)
+//   "maxUsers": -1,             // -1 = unlimited
+//   "maxStorage": -1,           // bytes, -1 = unlimited
+//   "maxWebhooks": -1,          // -1 = unlimited
+//   "features": ["posts", "ecommerce", "notifications"]
+// }

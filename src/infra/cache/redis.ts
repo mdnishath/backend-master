@@ -36,6 +36,12 @@ if (env.NODE_ENV !== 'production') {
     globalForRedis.redis = redis
 }
 
+// Check if Redis is available
+export let redisAvailable = false
+redis.ping()
+    .then(() => { redisAvailable = true })
+    .catch(() => { redisAvailable = false })
+
 // ─── CACHE HELPERS ──────────────────────────────────────────
 
 export async function cacheGet<T>(key: string): Promise<T | null> {

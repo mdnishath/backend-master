@@ -18,6 +18,8 @@ import { auditRoutes } from './api/v1/audit.routes.js'
 import { jobRoutes } from './api/v1/job.routes.js'
 import { webhookRoutes } from './api/v1/webhook.routes.js'
 import { featureFlagRoutes } from './api/v1/feature-flag.routes.js'
+import { planRoutes } from './api/v1/plan.routes.js'
+import { adminRoutes } from './api/v1/admin.routes.js'
 import { prisma } from './infra/database/prisma.js'
 import { successResponse } from './shared/response.js'
 
@@ -85,6 +87,8 @@ export async function buildApp() {
                 { name: 'Jobs', description: 'Background jobs' },
                 { name: 'Webhooks', description: 'Webhook subscriptions & delivery' },
                 { name: 'Features', description: 'Feature flags management' },
+                { name: 'Plans', description: 'Tenant plans & usage limits' },
+                { name: 'Admin', description: 'Admin dashboard & system management' },
             ],
         },
     })
@@ -101,27 +105,79 @@ export async function buildApp() {
     // ─── ERROR HANDLER ─────────────────────────────────────────
     await app.register(errorHandlerPlugin)
 
-    // ─── HEALTH CHECK ──────────────────────────────────────────
+    // ─── ENHANCED HEALTH CHECK ─────────────────────────────────
     app.get('/health', {
         schema: {
-            description: 'Health check endpoint',
+            description: 'Enhanced health check endpoint with all service status',
             tags: ['Health'],
         },
         handler: async (_request, reply) => {
-            let dbStatus = 'disconnected'
+            const checks: Record<string, { status: string; latency?: number; details?: unknown }> = {}
+
+            // Database check
+            const dbStart = Date.now()
             try {
                 await prisma.$queryRaw`SELECT 1`
-                dbStatus = 'connected'
-            } catch {
-                dbStatus = 'error'
+                checks.database = {
+                    status: 'healthy',
+                    latency: Date.now() - dbStart,
+                }
+            } catch (error) {
+                checks.database = {
+                    status: 'unhealthy',
+                    details: error instanceof Error ? error.message : 'Unknown error',
+                }
             }
 
-            return reply.send(successResponse({
-                status: 'ok',
+            // Redis check
+            const redisStart = Date.now()
+            try {
+                const { redis, redisAvailable } = await import('./infra/cache/redis.js')
+                if (redisAvailable) {
+                    await redis.ping()
+                    checks.redis = {
+                        status: 'healthy',
+                        latency: Date.now() - redisStart,
+                    }
+                } else {
+                    checks.redis = { status: 'disabled' }
+                }
+            } catch (error) {
+                checks.redis = {
+                    status: 'unhealthy',
+                    details: error instanceof Error ? error.message : 'Unknown error',
+                }
+            }
+
+            // Queue check
+            try {
+                const { getQueueStats } = await import('./infra/queue/queues.js')
+                const queueStats = await getQueueStats()
+                const totalFailed = queueStats.email.failed + queueStats.cleanup.failed + queueStats.webhooks.failed
+                checks.queues = {
+                    status: totalFailed > 100 ? 'degraded' : 'healthy',
+                    details: queueStats,
+                }
+            } catch (error) {
+                checks.queues = {
+                    status: 'unhealthy',
+                    details: error instanceof Error ? error.message : 'Unknown error',
+                }
+            }
+
+            // Overall status
+            const isHealthy = Object.values(checks).every(
+                check => check.status === 'healthy' || check.status === 'disabled'
+            )
+            const isDegraded = Object.values(checks).some(check => check.status === 'degraded')
+
+            return reply.status(isHealthy ? 200 : 503).send(successResponse({
+                status: isHealthy ? 'healthy' : isDegraded ? 'degraded' : 'unhealthy',
                 uptime: process.uptime(),
                 timestamp: new Date().toISOString(),
-                database: dbStatus,
                 environment: env.NODE_ENV,
+                version: '3.0.0',
+                checks,
             }))
         },
     })
@@ -135,6 +191,8 @@ export async function buildApp() {
     await app.register(jobRoutes, { prefix: '/api/v1' })
     await app.register(webhookRoutes, { prefix: '/api/v1' })
     await app.register(featureFlagRoutes, { prefix: '/api/v1' })
+    await app.register(planRoutes, { prefix: '/api/v1' })
+    await app.register(adminRoutes, { prefix: '/api/v1' })
 
     return app
 }

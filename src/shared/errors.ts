@@ -50,3 +50,12 @@ export class ValidationError extends AppError {
         this.details = details
     }
 }
+
+export class TooManyRequestsError extends AppError {
+    public readonly details: unknown
+
+    constructor(message = 'Too many requests', details?: unknown) {
+        super(message, 429, 'TOO_MANY_REQUESTS')
+        this.details = details
+    }
+}

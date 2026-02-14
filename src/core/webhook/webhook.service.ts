@@ -56,19 +56,23 @@ export async function createWebhook(
         throw new ValidationError('At least one event must be specified')
     }
 
-    // Check tenant's webhook limit (from plan)
-    const plan = await prisma.tenantPlan.findUnique({
-        where: { tenantId },
+    // Check tenant's webhook limit (from settings)
+    const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId },
+        select: { settings: true },
     })
 
-    if (plan) {
+    const settings = (tenant?.settings as any) || {}
+    const maxWebhooks = settings.maxWebhooks ?? -1 // -1 = unlimited
+
+    if (maxWebhooks !== -1) {
         const existingCount = await prisma.webhookSubscription.count({
             where: { tenantId, isActive: true },
         })
 
-        if (existingCount >= plan.maxWebhooks) {
+        if (existingCount >= maxWebhooks) {
             throw new ConflictError(
-                `Webhook limit reached. Your plan allows ${plan.maxWebhooks} webhooks.`,
+                `Webhook limit reached. Your limit is ${maxWebhooks} webhooks.`,
             )
         }
     }

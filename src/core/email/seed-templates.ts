@@ -38,25 +38,26 @@ export async function seedEmailTemplates(tenantId?: string) {
             const htmlBody = await readFile(htmlPath, 'utf-8')
 
             // Create or update template
+            const tid = tenantId === undefined ? null : tenantId
             await prisma.emailTemplate.upsert({
                 where: {
                     tenantId_name: {
-                        tenantId: tenantId || null,
+                        tenantId: tid!,
                         name: template.name,
                     },
                 },
                 update: {
                     subject: template.subject,
                     htmlBody,
-                    variables: template.variables,
+                    variables: template.variables as any,
                     isActive: true,
                 },
                 create: {
-                    tenantId: tenantId || null,
+                    tenantId: tid,
                     name: template.name,
                     subject: template.subject,
                     htmlBody,
-                    variables: template.variables,
+                    variables: template.variables as any,
                     isActive: true,
                 },
             })

@@ -121,7 +121,12 @@ export async function emailRoutes(app: FastifyInstance) {
             const template = await prisma.emailTemplate.create({
                 data: {
                     tenantId,
-                    ...body,
+                    name: body.name,
+                    subject: body.subject,
+                    htmlBody: body.htmlBody,
+                    textBody: body.textBody,
+                    variables: body.variables as any || {},
+                    isActive: body.isActive,
                 },
             })
 
@@ -182,7 +187,10 @@ export async function emailRoutes(app: FastifyInstance) {
 
             const template = await prisma.emailTemplate.update({
                 where: { id },
-                data: body,
+                data: {
+                    ...body,
+                    variables: body.variables as any,
+                },
             })
 
             return reply.send(successResponse(template, 'Template updated successfully'))

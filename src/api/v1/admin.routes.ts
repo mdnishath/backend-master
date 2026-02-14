@@ -218,11 +218,6 @@ export async function adminRoutes(app: FastifyInstance) {
                 },
             })
 
-            // Get plan info
-            const plan = await prisma.tenantPlan.findUnique({
-                where: { tenantId: id },
-            })
-
             // Get usage stats
             const [webhookCount, fileCount, fileSize] = await Promise.all([
                 prisma.webhookSubscription.count({ where: { tenantId: id } }),
@@ -235,7 +230,6 @@ export async function adminRoutes(app: FastifyInstance) {
 
             return reply.send(successResponse({
                 ...tenant,
-                plan,
                 usage: {
                     webhooks: webhookCount,
                     files: fileCount,
